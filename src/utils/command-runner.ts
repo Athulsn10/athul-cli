@@ -11,7 +11,8 @@ export interface CommandResult {
 export async function runCommand(
     command: string,
     args: string[],
-    osType: OSType
+    osType: OSType,
+    silent: boolean = false
 ): Promise<CommandResult> {
     return new Promise((resolve) => {
         let output = '';
@@ -28,13 +29,13 @@ export async function runCommand(
         child.stdout?.on('data', (data) => {
             const text = data.toString();
             output += text;
-            process.stdout.write(text);
+            if (!silent) process.stdout.write(text);
         });
 
         child.stderr?.on('data', (data) => {
             const text = data.toString();
             error += text;
-            process.stderr.write(text);
+            if (!silent) process.stderr.write(text);
         });
 
         child.on('close', (code) => {

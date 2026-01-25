@@ -23,7 +23,7 @@ export function displayBanner(): void {
     console.log(boxen(
         chalk.hex('#00f5ff')('WordPress DDEV Setup Tool') +
         chalk.gray(' • ') +
-        chalk.hex('#bf00ff')('Powered by Gemini AI'),
+        chalk.hex('#bf00ff')('By Athul'),
         {
             padding: { left: 2, right: 2, top: 0, bottom: 0 },
             borderStyle: 'round',

@@ -19,8 +19,8 @@ export async function initCommand(): Promise<void> {
     // Display futuristic banner
     displayBanner();
 
-    // System Detection Section
-    displaySection('System Detection');
+    // System Checks Section
+    displaySection('System Checks');
 
     const osType = detectOS();
     displayStatus('Operating System', getOSDisplayName(osType), 'success');
@@ -36,6 +36,78 @@ export async function initCommand(): Promise<void> {
     } else {
         displayStatus('Gemini AI', 'Not configured (set GEMINI_API_KEY)', 'warning');
     }
+
+    // Docker Check
+    const dockerSpinner = createSpinner('Checking Docker status...');
+    dockerSpinner.start();
+
+    const dockerCheck = await runCommand('docker', ['info'], osType, true);
+
+    if (!dockerCheck.success) {
+        dockerSpinner.warn(chalk.yellow('Docker is not running'));
+
+        const { default: inquirer } = await import('inquirer');
+
+        const { startDocker } = await inquirer.prompt([{
+            type: 'confirm',
+            name: 'startDocker',
+            message: 'Would you like to start Docker Desktop now?',
+            default: true
+        }]);
+
+        if (startDocker) {
+            const startSpinner = createSpinner('Starting Docker Desktop...');
+            startSpinner.start();
+
+            let startCmd = '';
+            if (osType === 'macos') {
+                startCmd = 'open -a Docker';
+            } else if (osType === 'windows') {
+                startCmd = 'start "" "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe"';
+            } else {
+                startSpinner.fail('Cannot auto-start Docker on this OS');
+                console.log(chalk.red('Please start Docker manually and try again.'));
+                process.exit(1);
+            }
+
+            try {
+                const { exec } = await import('child_process');
+                exec(startCmd);
+
+                startSpinner.text = 'Waiting for Docker to be ready...';
+
+                let attempts = 0;
+                const maxAttempts = 60; // 2 minutes
+                let isRunning = false;
+
+                while (attempts < maxAttempts) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    const check = await runCommand('docker', ['info'], osType, true);
+                    if (check.success) {
+                        isRunning = true;
+                        break;
+                    }
+                    attempts++;
+                }
+
+                if (isRunning) {
+                    startSpinner.succeed(chalk.hex('#00ff88')('Docker is now running'));
+                } else {
+                    startSpinner.fail('Timed out waiting for Docker');
+                    console.log(chalk.red('Please ensure Docker Desktop is running and try again.'));
+                    process.exit(1);
+                }
+
+            } catch (error) {
+                startSpinner.fail('Failed to start Docker');
+                process.exit(1);
+            }
+        } else {
+            process.exit(1);
+        }
+    }
+
+    dockerSpinner.succeed(chalk.hex('#00ff88')('Docker is running'));
 
     // Validation Section
     displaySection('Project Validation');
