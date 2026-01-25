@@ -13,7 +13,7 @@ const errorGradient = gradient(['#ff006e', '#ff0000']);
 export function displayBanner(): void {
     console.clear();
 
-    const banner = figlet.textSync('ATHUL', {
+    const banner = figlet.textSync('ATHUL CLI', {
         font: 'ANSI Shadow',
         horizontalLayout: 'fitted'
     });
