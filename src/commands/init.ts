@@ -117,6 +117,75 @@ export async function initCommand(): Promise<void> {
         cmdSpinner.succeed(chalk.hex('#00ff88')(ddevCmd.description));
     }
 
+    // DB Import Section
+    displaySection('Database Import');
+
+    // Prompt for DB file
+    const { default: inquirer } = await import('inquirer');
+
+    console.log(chalk.gray('\n  To import a database, provide the path to your .sql, .sql.gz, or .zip file.'));
+    console.log(chalk.gray('  Example Windows: ') + chalk.white('C:\\Users\\name\\Downloads\\db.sql'));
+    console.log(chalk.gray('  Example macOS/Linux: ') + chalk.white('/Users/name/Downloads/db.sql'));
+    console.log(chalk.gray('  (Press Enter to skip)\n'));
+
+    const { dbPath } = await inquirer.prompt([{
+        type: 'input',
+        name: 'dbPath',
+        message: 'Database file path:',
+        trim: true
+    }]);
+
+    if (dbPath) {
+        const importSpinner = createSpinner('Importing database...');
+        importSpinner.start();
+
+        // Remove quotes if user added them
+        const cleanPath = dbPath.replace(/^["']|["']$/g, '');
+
+        const result = await runCommand('ddev', ['import-db', `--file=${cleanPath}`], osType);
+
+        if (!result.success) {
+            importSpinner.fail(chalk.hex('#ff006e')('Database import failed'));
+            displayError(`Command failed: ddev import-db --file=${cleanPath}`);
+
+            if (result.error) {
+                console.log(chalk.gray('\n  Error output:'));
+                console.log(chalk.hex('#ff006e')(`  ${result.error.split('\n').join('\n  ')}`));
+            }
+
+            if (geminiInitialized) {
+                const analysisSpinner = createSpinner('Analyzing error with Gemini AI...');
+                analysisSpinner.start();
+                const analysis = await analyzeError(
+                    `ddev import-db --file=${cleanPath}`,
+                    result.error || result.output,
+                    getOSDisplayName(osType)
+                );
+                analysisSpinner.stop();
+                displayAIAnalysis(analysis);
+            }
+            // We don't exit here, we'll try to launch anyway 
+            console.log(chalk.yellow('\n  Proceeding with launch despite DB import failure...'));
+        } else {
+            importSpinner.succeed(chalk.hex('#00ff88')('Database imported successfully'));
+        }
+    } else {
+        console.log(chalk.gray('  Skipping database import...'));
+    }
+
+    // Launch Section
+    const launchSpinner = createSpinner('Launching project...');
+    launchSpinner.start();
+
+    const result = await runCommand('ddev', ['launch'], osType);
+
+    if (!result.success) {
+        launchSpinner.fail(chalk.hex('#ff006e')('Launch failed'));
+        // Even if launch fails, the site might be running, so we just show error
+    } else {
+        launchSpinner.succeed(chalk.hex('#00ff88')('Project launched'));
+    }
+
     // Success!
     displaySuccess('WordPress Setup Complete!');
 

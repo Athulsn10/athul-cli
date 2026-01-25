@@ -84,9 +84,9 @@ export const DDEV_COMMANDS: DDEVCommand[] = [
         description: 'Downloading WordPress core files'
     },
     {
-        name: 'launch',
+        name: 'download',
         command: 'ddev',
-        args: ['launch'],
-        description: 'Launching WordPress in browser'
+        args: ['wp', 'core', 'download'],
+        description: 'Downloading WordPress core files'
     }
 ];
