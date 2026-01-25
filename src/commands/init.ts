@@ -164,7 +164,6 @@ export async function initCommand(): Promise<void> {
                 analysisSpinner.stop();
                 displayAIAnalysis(analysis);
             }
-            // We don't exit here, we'll try to launch anyway 
             console.log(chalk.yellow('\n  Proceeding with launch despite DB import failure...'));
         } else {
             importSpinner.succeed(chalk.hex('#00ff88')('Database imported successfully'));
@@ -181,12 +180,10 @@ export async function initCommand(): Promise<void> {
 
     if (!result.success) {
         launchSpinner.fail(chalk.hex('#ff006e')('Launch failed'));
-        // Even if launch fails, the site might be running, so we just show error
     } else {
         launchSpinner.succeed(chalk.hex('#00ff88')('Project launched'));
     }
 
-    // Success!
     displaySuccess('WordPress Setup Complete!');
 
     console.log(chalk.gray('  Your WordPress site is now running.'));

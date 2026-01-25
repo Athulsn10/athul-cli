@@ -43,7 +43,6 @@ export function validateWordPressStructure(directory: string): ValidationResult 
         return result;
     }
 
-    // If we have themes, add them as info
     result.warnings.push(`Found ${themes.length} theme(s): ${themes.join(', ')}`);
 
     return result;
