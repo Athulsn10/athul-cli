@@ -1,0 +1,10 @@
+# Files to exclude from npm package
+.env
+.env.local
+.env.example
+.gitignore
+tsconfig.json
+src/
+*.log
+.idea/
+.vscode/
