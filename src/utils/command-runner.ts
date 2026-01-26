@@ -18,11 +18,8 @@ export async function runCommand(
         let output = '';
         let error = '';
 
-        // On Windows, we need to use shell: true for ddev commands
-        const isWindows = osType === 'windows';
-
         const child = spawn(command, args, {
-            shell: isWindows,
+            shell: true,
             stdio: ['inherit', 'pipe', 'pipe']
         });
 
