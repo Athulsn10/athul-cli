@@ -108,7 +108,7 @@ export function displayError(message: string): void {
 
 export function displayAIAnalysis(analysis: string): void {
     console.log('\n' + boxen(
-        cyberGradient('🤖 GEMINI AI ANALYSIS\n\n') +
+        cyberGradient('🤖 AI ANALYSIS\n\n') +
         chalk.white(analysis),
         {
             padding: 1,
@@ -123,6 +123,7 @@ export function displayAIAnalysis(analysis: string): void {
 export function createSpinner(text: string): ReturnType<typeof ora> {
     return ora({
         text: chalk.hex('#00f5ff')(text),
+        indent: 2,
         spinner: {
             interval: 80,
             frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'].map(f => chalk.hex('#bf00ff')(f))

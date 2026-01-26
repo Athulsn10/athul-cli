@@ -32,9 +32,9 @@ export async function initCommand(): Promise<void> {
     // Gemini Connection
     const geminiInitialized = initializeGemini();
     if (geminiInitialized) {
-        displayStatus('Gemini AI', 'Connected', 'success');
+        displayStatus('AI', 'Connected', 'success');
     } else {
-        displayStatus('Gemini AI', 'Not configured (set GEMINI_API_KEY)', 'warning');
+        displayStatus('AI', 'Not configured (set GEMINI_API_KEY)', 'warning');
     }
 
     // Docker Check
@@ -74,7 +74,7 @@ export async function initCommand(): Promise<void> {
                 const { exec } = await import('child_process');
                 exec(startCmd);
 
-                startSpinner.text = 'Waiting for Docker to be ready...';
+                startSpinner.text = chalk.hex('#00f5ff')('Waiting for Docker to be ready...');
 
                 let attempts = 0;
                 const maxAttempts = 60; // 2 minutes
@@ -108,6 +108,24 @@ export async function initCommand(): Promise<void> {
     }
 
     dockerSpinner.succeed(chalk.hex('#00ff88')('Docker is running'));
+
+    // DDEV Check
+    const ddevSpinner = createSpinner('Checking DDEV installation...');
+    ddevSpinner.start();
+
+    const ddevCheck = await runCommand('ddev', ['--version'], osType, true);
+
+    if (!ddevCheck.success) {
+        ddevSpinner.fail(chalk.yellow('DDEV is not installed'));
+        displayError('DDEV is required to run this project.');
+        console.log();
+        const { default: terminalLink } = await import('terminal-link');
+        const link = terminalLink(chalk.gray('Please install DDEV by following the instructions at:'), 'https://ddev.com/get-started/');
+        console.log(link + '\n');
+        process.exit(1);
+    }
+
+    ddevSpinner.succeed(chalk.hex('#00ff88')('DDEV is installed'));
 
     // Validation Section
     displaySection('Project Validation');
@@ -170,7 +188,7 @@ export async function initCommand(): Promise<void> {
 
             // Use Gemini for error analysis
             if (geminiInitialized) {
-                const analysisSpinner = createSpinner('Analyzing error with Gemini AI...');
+                const analysisSpinner = createSpinner('Analyzing error with AI...');
                 analysisSpinner.start();
 
                 const analysis = await analyzeError(
@@ -226,7 +244,7 @@ export async function initCommand(): Promise<void> {
             }
 
             if (geminiInitialized) {
-                const analysisSpinner = createSpinner('Analyzing error with Gemini AI...');
+                const analysisSpinner = createSpinner('Analyzing error with AI...');
                 analysisSpinner.start();
                 const analysis = await analyzeError(
                     `ddev import-db --file=${cleanPath}`,
