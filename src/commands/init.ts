@@ -113,7 +113,9 @@ export async function initCommand(): Promise<void> {
     const ddevSpinner = createSpinner('Checking DDEV installation...');
     ddevSpinner.start();
 
+    console.log(chalk.gray(`[DEBUG] Executing command: ddev --version (OS: ${osType})`));
     const ddevCheck = await runCommand('ddev', ['--version'], osType, true);
+    console.log("ddevcheck value:", ddevCheck)
 
     if (!ddevCheck.success) {
         ddevSpinner.fail(chalk.yellow('DDEV is not installed'));
