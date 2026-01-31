@@ -91,7 +91,7 @@ export async function analyzeError(
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
 
         const validErrorOutput = errorOutput ? errorOutput : 'No error output provided';
         // Truncate error output to avoid token limits (approx 4000 chars)
