@@ -35,16 +35,33 @@ export async function initCommand(): Promise<void> {
     const envPath = path.join(process.cwd(), '.athul-env');
     if (!fs.existsSync(envPath)) {
         const { default: inquirer } = await import('inquirer');
+        console.log(chalk.yellow('\n⚠️  AI Configuration check'));
         const { createEnv } = await inquirer.prompt([{
             type: 'confirm',
             name: 'createEnv',
-            message: 'No .athul-env file found. Create one for AI features?',
+            message: 'No .athul-env file found. This is required for AI features. Create one now?',
             default: true
         }]);
 
         if (createEnv) {
-            fs.writeFileSync(envPath, 'GEMINI_API_KEY=""');
-            console.log(chalk.green('  Created .athul-env file. Please add your API key to enable AI features.'));
+            const { apiKey } = await inquirer.prompt([{
+                type: 'password',
+                name: 'apiKey',
+                message: 'Enter your Gemini API Key:',
+                mask: '*'
+            }]);
+
+            if (apiKey && apiKey.trim()) {
+                fs.writeFileSync(envPath, `GEMINI_API_KEY="${apiKey.trim()}"`);
+                console.log(chalk.green('  Created .athul-env file with your API key.'));
+            } else {
+                console.log(chalk.red('\n  API Key is required to proceed. Please restart and provide a key.'));
+                console.log(chalk.gray('  You can get a free key at: https://ai.google.dev/'));
+                process.exit(1);
+            }
+        } else {
+            console.log(chalk.red('\n  .athul-env file is required for AI features. Exiting...'));
+            process.exit(1);
         }
     }
 
@@ -183,10 +200,20 @@ export async function initCommand(): Promise<void> {
     // DDEV Setup Section
     displaySection('DDEV WordPress Setup');
 
-    const totalSteps = DDEV_COMMANDS.length;
+    // Check if WordPress files already exist to skip download
+    const wpFilesExist = fs.existsSync(path.join(process.cwd(), 'wp-settings.php')) ||
+        fs.existsSync(path.join(process.cwd(), 'wp-includes'));
 
-    for (let i = 0; i < DDEV_COMMANDS.length; i++) {
-        const ddevCmd = DDEV_COMMANDS[i];
+    let commandsToRun = DDEV_COMMANDS;
+    if (wpFilesExist) {
+        commandsToRun = DDEV_COMMANDS.filter(cmd => !cmd.args.includes('download'));
+        displayStatus('WordPress Core', 'Files already present, skipping download', 'info');
+    }
+
+    const totalSteps = commandsToRun.length;
+
+    for (let i = 0; i < commandsToRun.length; i++) {
+        const ddevCmd = commandsToRun[i];
 
         displayStep(i + 1, totalSteps, ddevCmd.description);
 
