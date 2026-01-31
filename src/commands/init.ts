@@ -33,17 +33,34 @@ export async function initCommand(): Promise<void> {
 
     // Check for .athul-env
     const envPath = path.join(process.cwd(), '.athul-env');
-    if (!fs.existsSync(envPath)) {
+    let shouldPromptForKey = !fs.existsSync(envPath);
+
+    // If file exists, check if it has a valid key
+    if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, 'utf-8');
+        if (content.includes('GEMINI_API_KEY=""') || content.includes("GEMINI_API_KEY=''")) {
+            shouldPromptForKey = true;
+            console.log(chalk.yellow('\n⚠️  Found .athul-env but API key is empty.'));
+        }
+    }
+
+    if (shouldPromptForKey) {
         const { default: inquirer } = await import('inquirer');
         console.log(chalk.yellow('\n⚠️  AI Configuration check'));
-        const { createEnv } = await inquirer.prompt([{
-            type: 'confirm',
-            name: 'createEnv',
-            message: 'No .athul-env file found. This is required for AI features. Create one now?',
-            default: true
-        }]);
 
-        if (createEnv) {
+        // If file doesn't exist, confirm creation. If it exists but is empty, just ask for key.
+        let proceed = true;
+        if (!fs.existsSync(envPath)) {
+            const { createEnv } = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'createEnv',
+                message: 'No .athul-env file found. This is required for AI features. Create one now?',
+                default: true
+            }]);
+            proceed = createEnv;
+        }
+
+        if (proceed) {
             const { apiKey } = await inquirer.prompt([{
                 type: 'password',
                 name: 'apiKey',
@@ -53,7 +70,7 @@ export async function initCommand(): Promise<void> {
 
             if (apiKey && apiKey.trim()) {
                 fs.writeFileSync(envPath, `GEMINI_API_KEY="${apiKey.trim()}"`);
-                console.log(chalk.green('  Created .athul-env file with your API key.'));
+                console.log(chalk.green('  Saved API key to .athul-env file.'));
             } else {
                 console.log(chalk.red('\n  API Key is required to proceed. Please restart and provide a key.'));
                 console.log(chalk.gray('  You can get a free key at: https://ai.google.dev/'));
@@ -278,7 +295,8 @@ export async function initCommand(): Promise<void> {
         // Remove quotes if user added them
         const cleanPath = dbPath.replace(/^["']|["']$/g, '');
 
-        const result = await runCommand('ddev', ['import-db', `--file=${cleanPath}`], osType);
+        // Quote the path to handle spaces
+        const result = await runCommand('ddev', ['import-db', `--file="${cleanPath}"`], osType);
 
         if (!result.success) {
             importSpinner.fail(chalk.hex('#ff006e')('Database import failed'));

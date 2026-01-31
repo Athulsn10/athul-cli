@@ -1,6 +1,6 @@
 {
     "name": "athul-cli",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "description": "CLI tool for setting up WordPress projects locally using DDEV with AI error handling",
     "type": "module",
     "main": "dist/index.js",
