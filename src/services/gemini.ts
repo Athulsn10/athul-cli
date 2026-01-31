@@ -93,20 +93,26 @@ export async function analyzeError(
     try {
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
+        const validErrorOutput = errorOutput ? errorOutput : 'No error output provided';
+        // Truncate error output to avoid token limits (approx 4000 chars)
+        const truncatedError = validErrorOutput.length > 4000
+            ? validErrorOutput.substring(validErrorOutput.length - 4000)
+            : validErrorOutput;
+
         const prompt = `You are a helpful assistant for developers setting up WordPress with DDEV.
 
-        A user running on ${osType} encountered an error while executing the following command:
-        Command: ${command}
+A user running on ${osType} encountered an error while executing the following command:
+Command: ${command}
 
-        Error output:
-        ${errorOutput}
+Error output:
+${truncatedError}
 
-        Please analyze this error and provide:
-        1. A brief explanation of what went wrong
-        2. Step-by-step instructions to fix the issue
-        3. Any preventive measures for the future
+Please analyze this error and provide:
+1. A brief explanation of what went wrong
+2. Step-by-step instructions to fix the issue
+3. Any preventive measures for the future
 
-        Keep your response concise and actionable. Format it for terminal output (no markdown).`;
+Keep your response concise and actionable. Format it for terminal output (no markdown).`;
 
         const result = await model.generateContent(prompt);
         const response = result.response;
