@@ -91,7 +91,7 @@ export async function analyzeError(
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
         const prompt = `You are a helpful assistant for developers setting up WordPress with DDEV.
 

@@ -61,6 +61,14 @@ export async function initCommand(): Promise<void> {
         }
 
         if (proceed) {
+            // Display instructions for getting API key
+            console.log(chalk.cyan('\n📝 How to get your Gemini API Key:'));
+            console.log(chalk.white('  1. Visit: ') + chalk.hex('#00f5ff')('https://ai.google.dev/'));
+            console.log(chalk.white('  2. Click on "Get API key in Google AI Studio"'));
+            console.log(chalk.white('  3. Sign in with your Google account'));
+            console.log(chalk.white('  4. Click "Create API Key" and copy it'));
+            console.log(chalk.gray('  (The key is free and takes less than a minute to generate)\n'));
+
             const { apiKey } = await inquirer.prompt([{
                 type: 'password',
                 name: 'apiKey',
