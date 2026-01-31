@@ -1,12 +1,79 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import chalk from 'chalk';
+import * as fs from 'fs';
+import * as path from 'path';
 
 let genAI: GoogleGenerativeAI | null = null;
 
+/**
+ * Reads API key from .athul-env file in current directory
+ */
+function getApiKeyFromEnvFile(): string | null {
+    const envFilePath = path.join(process.cwd(), '.athul-env');
+
+    try {
+        if (!fs.existsSync(envFilePath)) {
+            return null;
+        }
+
+        const envContent = fs.readFileSync(envFilePath, 'utf-8');
+        const lines = envContent.split('\n');
+
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            // Skip empty lines and comments
+            if (!trimmedLine || trimmedLine.startsWith('#')) {
+                continue;
+            }
+
+            // Parse KEY=VALUE format
+            const match = trimmedLine.match(/^GEMINI_API_KEY\s*=\s*(.+)$/);
+            if (match) {
+                // Remove quotes if present
+                let apiKey = match[1].trim();
+                if ((apiKey.startsWith('"') && apiKey.endsWith('"')) ||
+                    (apiKey.startsWith("'") && apiKey.endsWith("'"))) {
+                    apiKey = apiKey.slice(1, -1);
+                }
+                return apiKey;
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error(chalk.red('Error reading .athul-env file:'), error);
+        return null;
+    }
+}
+
+/**
+ * Gets API key from multiple sources in order of precedence
+ */
+function getApiKey(): string | null {
+    // 1. Check environment variable
+    if (process.env.GEMINI_API_KEY) {
+        return process.env.GEMINI_API_KEY;
+    }
+
+    // 2. Check .athul-env file in current directory
+    const apiKey = getApiKeyFromEnvFile();
+    if (apiKey) {
+        return apiKey;
+    }
+
+    return null;
+}
+
 export function initializeGemini(): boolean {
-    const apiKey = 'AIzaSyC24X_DAHcV0vntj0jY2ZXQEmUMv_LNiYQ';
+    const apiKey = getApiKey();
 
     if (!apiKey) {
+        console.log(chalk.yellow('\n⚠️  Gemini API key not found!'));
+        console.log(chalk.white('\nTo enable AI-powered error analysis:'));
+        console.log(chalk.cyan('  1. Get a free API key from: https://ai.google.dev/'));
+        console.log(chalk.cyan('  2. Create a .athul-env file in your project directory'));
+        console.log(chalk.cyan('  3. Add this line to the file:'));
+        console.log(chalk.green('     GEMINI_API_KEY=your-api-key-here\n'));
         return false;
     }
 
@@ -20,7 +87,7 @@ export async function analyzeError(
     osType: string
 ): Promise<string> {
     if (!genAI) {
-        return 'Gemini API not initialized. Set GEMINI_API_KEY environment variable for AI-powered error analysis.';
+        return 'Gemini API not initialized. Create a .athul-env file with GEMINI_API_KEY=your-key for AI-powered error analysis.';
     }
 
     try {

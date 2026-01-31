@@ -1,4 +1,6 @@
 import chalk from 'chalk';
+import * as fs from 'fs';
+import * as path from 'path';
 import { detectOS, getOSDisplayName } from '../utils/os-detector.js';
 import { validateWordPressStructure } from '../utils/validator.js';
 import { runCommand, DDEV_COMMANDS } from '../utils/command-runner.js';
@@ -27,6 +29,23 @@ export async function initCommand(): Promise<void> {
 
     if (osType === 'unknown') {
         displayStatus('Warning', 'Unknown OS detected, using defaults', 'warning');
+    }
+
+    // Check for .athul-env
+    const envPath = path.join(process.cwd(), '.athul-env');
+    if (!fs.existsSync(envPath)) {
+        const { default: inquirer } = await import('inquirer');
+        const { createEnv } = await inquirer.prompt([{
+            type: 'confirm',
+            name: 'createEnv',
+            message: 'No .athul-env file found. Create one for AI features?',
+            default: true
+        }]);
+
+        if (createEnv) {
+            fs.writeFileSync(envPath, 'GEMINI_API_KEY=""');
+            console.log(chalk.green('  Created .athul-env file. Please add your API key to enable AI features.'));
+        }
     }
 
     // Gemini Connection
